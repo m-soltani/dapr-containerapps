@@ -57,7 +57,7 @@ module env 'environment.bicep' = {
   params: {
     environmentName: 'collegaues-apps'
     location: location
-    infrastructureSubnetId: filter(vnet.outputs.vnetSubnets, arg => arg.name == 'InfrastructureSubnet')[0].id
-    runtimeSubnetId: filter(vnet.outputs.vnetSubnets, arg => arg.name == 'RuntimeSubnet')[0].id
+    infrastructureSubnetId: first(filter(vnet.outputs.vnetSubnets, arg => arg.name == 'InfrastructureSubnet')).id
+    runtimeSubnetId: first(filter(vnet.outputs.vnetSubnets, arg => arg.name == 'RuntimeSubnet')).id
   }
 }
