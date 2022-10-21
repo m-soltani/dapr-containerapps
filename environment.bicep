@@ -8,6 +8,9 @@ param managedIdentityName string = 'nodeapp-identity'
 var logAnalyticsWorkspaceName = 'logs-${environmentName}'
 var appInsightsName = 'appins-${environmentName}'
 
+param infrastructureSubnetId string
+param runtimeSubnetId string
+
 resource logAnalyticsWorkspace'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
   name: logAnalyticsWorkspaceName
   location: location
@@ -43,6 +46,10 @@ resource environment 'Microsoft.App/managedEnvironments@2022-03-01' = {
         customerId: reference(logAnalyticsWorkspace.id, '2021-06-01').customerId
         sharedKey: listKeys(logAnalyticsWorkspace.id, '2021-06-01').primarySharedKey
       }
+    }
+    vnetConfiguration: {
+      infrastructureSubnetId: infrastructureSubnetId
+      runtimeSubnetId: runtimeSubnetId
     }
   }
 }
