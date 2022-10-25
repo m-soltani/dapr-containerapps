@@ -1,1 +1,1 @@
-# dapr-containerapps
+# Dapr Container Apps
