@@ -145,7 +145,7 @@ resource nodeapp 'Microsoft.App/containerApps@2022-03-01' = {
     managedEnvironmentId: environment.id
     configuration: {
       ingress: {
-        external: false
+        external: true
         targetPort: 3000
       }
       dapr: {
@@ -215,4 +215,35 @@ resource pythonapp 'Microsoft.App/containerApps@2022-03-01' = {
   dependsOn: [
     nodeapp
   ]
+}
+
+resource react 'Microsoft.App/containerApps@2022-03-01' = {
+  name: 'reactapp'
+  location: location
+  tags: tags
+  properties: {
+    managedEnvironmentId: environment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 3000
+      }
+    }
+    template: {
+      containers: [
+        {
+          image: 'dapriosamples/distributed-calculator-react-calculator:latest'
+          name: 'distributed-calculator-react-calculator'
+          resources: {
+            cpu: json('0.5')
+            memory: '1.0Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
+    }
+  }
 }
