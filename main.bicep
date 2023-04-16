@@ -1,16 +1,18 @@
 targetScope = 'subscription'
 
 param location string = 'westeurope'
-
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: 'poc-containerapps-dapr'
-  location: location
+param now string = utcNow('g')
+var tags = {
+  Owner: 'Mehrdad'
 }
 
-param now string = utcNow()
+resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: 'containerapps-dapr'
+  location: location
+  tags: tags
+}
 
-
-module vnet 'vnets.bicep' = {
+module vnet 'vnets.bicep' = if (false) {
   scope: rg
   name: 'vnet-${take(guid(now), 5)}'
   params: {
@@ -50,14 +52,12 @@ module vnet 'vnets.bicep' = {
   }
 }
 
-
 module env 'environment.bicep' = {
-  name: 'container-app-env-${take(guid(now), 5)}'
+  name: 'container-apps-${take(guid(now), 5)}'
   scope: rg
   params: {
     environmentName: 'collegaues-apps'
     location: location
-    infrastructureSubnetId: first(filter(vnet.outputs.vnetSubnets, arg => arg.name == 'InfrastructureSubnet')).id
-    runtimeSubnetId: first(filter(vnet.outputs.vnetSubnets, arg => arg.name == 'RuntimeSubnet')).id
+    tags: tags
   }
 }

@@ -5,14 +5,15 @@ param uniqueSuffix string = uniqueString(uniqueSeed)
 param storageAccountName string = 'storage${replace(uniqueSuffix, '-', '')}'
 param blobContainerName string = 'orders'
 param managedIdentityName string = 'nodeapp-identity'
+param tags object
+
 var logAnalyticsWorkspaceName = 'logs-${environmentName}'
 var appInsightsName = 'appins-${environmentName}'
 
-param infrastructureSubnetId string
-param runtimeSubnetId string
 
-resource logAnalyticsWorkspace'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
   name: logAnalyticsWorkspaceName
+  tags: tags
   location: location
   properties: any({
     retentionInDays: 30
@@ -28,6 +29,7 @@ resource logAnalyticsWorkspace'Microsoft.OperationalInsights/workspaces@2021-06-
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: appInsightsName
   location: location
+  tags: tags
   kind: 'web'
   properties: {
     Application_Type: 'web'
@@ -35,21 +37,21 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource environment 'Microsoft.App/managedEnvironments@2022-03-01' = {
+resource environment 'Microsoft.App/managedEnvironments@2022-10-01' = {
   name: environmentName
   location: location
+  tags: tags
+  sku: {
+    name: 'Consumption'
+  }
   properties: {
-    daprAIInstrumentationKey: reference(appInsights.id, '2020-02-02').InstrumentationKey
+    daprAIInstrumentationKey: appInsights.properties.InstrumentationKey
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
-        customerId: reference(logAnalyticsWorkspace.id, '2021-06-01').customerId
-        sharedKey: listKeys(logAnalyticsWorkspace.id, '2021-06-01').primarySharedKey
+        customerId: logAnalyticsWorkspace.properties.customerId
+        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
-    }
-    vnetConfiguration: {
-      infrastructureSubnetId: infrastructureSubnetId
-      runtimeSubnetId: runtimeSubnetId
     }
   }
 }
@@ -58,6 +60,7 @@ resource environment 'Microsoft.App/managedEnvironments@2022-03-01' = {
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   name: storageAccountName
   location: location
+  tags: tags
   kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
@@ -88,6 +91,7 @@ resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   name: guid(resourceGroup().id, contributorRoleDefinition.id)
+  scope: storageAccount
   properties: {
     roleDefinitionId: contributorRoleDefinition.id
     principalId: managedIdentity.properties.principalId
@@ -127,14 +131,14 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03
   ]
 }
 
-
 resource nodeapp 'Microsoft.App/containerApps@2022-03-01' = {
   name: 'nodeapp'
   location: location
+  tags: tags
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentity.id}' : {}
+      '${managedIdentity.id}': {}
     }
   }
   properties: {
@@ -182,6 +186,7 @@ resource nodeapp 'Microsoft.App/containerApps@2022-03-01' = {
 resource pythonapp 'Microsoft.App/containerApps@2022-03-01' = {
   name: 'pythonapp'
   location: location
+  tags: tags
   properties: {
     managedEnvironmentId: environment.id
     configuration: {

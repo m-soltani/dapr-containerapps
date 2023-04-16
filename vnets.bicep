@@ -59,48 +59,48 @@ param diagProperties object = {}
 param roleAssignments array = []
 
 resource virtualNetworks_resource 'Microsoft.Network/virtualNetworks@2022-01-01' = {
-  name:       name
-  tags:       empty(tags) ? null : tags
-  location:   location
+  name: name
+  tags: empty(tags) ? null : tags
+  location: location
   properties: {
     addressSpace: {
       addressPrefixes: addressPrefixes
     }
-    bgpCommunities:         empty(bgpCommunities) ? null : bgpCommunities
-    ddosProtectionPlan:     empty(ddosProtectionPlan) ? null : ddosProtectionPlan
-    dhcpOptions:            empty(dhcpOptions) ? null : dhcpOptions
-    enableDdosProtection:   enableDdosProtection ? true : null
-    enableVmProtection:     enableVmProtection ? true : null
-    encryption:             empty(encryption) ? null : encryption
-    flowTimeoutInMinutes:   flowTimeoutInMinutes == 0 ? null : flowTimeoutInMinutes
-    ipAllocations:          empty(ipAllocations) ? null : ipAllocations
-    subnets:                empty(subnets) ? null : subnets
+    bgpCommunities: empty(bgpCommunities) ? null : bgpCommunities
+    ddosProtectionPlan: empty(ddosProtectionPlan) ? null : ddosProtectionPlan
+    dhcpOptions: empty(dhcpOptions) ? null : dhcpOptions
+    enableDdosProtection: enableDdosProtection ? true : null
+    enableVmProtection: enableVmProtection ? true : null
+    encryption: empty(encryption) ? null : encryption
+    flowTimeoutInMinutes: flowTimeoutInMinutes == 0 ? null : flowTimeoutInMinutes
+    ipAllocations: empty(ipAllocations) ? null : ipAllocations
+    subnets: empty(subnets) ? null : subnets
     virtualNetworkPeerings: empty(virtualNetworkPeerings) ? null : virtualNetworkPeerings
   }
 }
 
 resource diagnosticSettings_resource 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (!empty(diagProperties)) {
-  scope:      virtualNetworks_resource
-  name:       '${name}-diag'
+  scope: virtualNetworks_resource
+  name: '${name}-diag'
   properties: diagProperties
 }
 
-resource roleAssignment_resource 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for ra in roleAssignments : if (!empty(roleAssignments)) {
-  scope:  virtualNetworks_resource
-  name:   guid(name, ra.principalId, ra.roleDefinitionId)
+resource roleAssignment_resource 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for ra in roleAssignments: if (!empty(roleAssignments)) {
+  scope: virtualNetworks_resource
+  name: guid(name, ra.principalId, ra.roleDefinitionId)
   properties: {
-    condition:                          contains(ra, 'condition') ? ra.condition : null
-    conditionVersion:                   contains(ra, 'conditionVersion') ? ra.conditionVersion : null
+    condition: contains(ra, 'condition') ? ra.condition : null
+    conditionVersion: contains(ra, 'conditionVersion') ? ra.conditionVersion : null
     delegatedManagedIdentityResourceId: contains(ra, 'delegatedManagedIdentityResourceId') ? ra.delegatedManagedIdentityResourceId : null
-    description:                        contains(ra, 'description') ? ra.description : null
-    principalId:                        contains(ra, 'principalId') ? ra.principalId : null
-    principalType:                      contains(ra, 'principalType') ? ra.principalType : null
-    roleDefinitionId:                   contains(ra, 'roleDefinitionId') ? ra.roleDefinitionId : null
+    description: contains(ra, 'description') ? ra.description : null
+    principalId: contains(ra, 'principalId') ? ra.principalId : null
+    principalType: contains(ra, 'principalType') ? ra.principalType : null
+    roleDefinitionId: contains(ra, 'roleDefinitionId') ? ra.roleDefinitionId : null
   }
 }]
 
 output virtualNetwork object = {
-  name:       virtualNetworks_resource.name
+  name: virtualNetworks_resource.name
   resourceId: virtualNetworks_resource.id
 }
 
